@@ -36,7 +36,7 @@ public class Helper {
     /**
      * Create a shape to the body
      *
-     * @param body Out body
+     * @param body Our body
      * @param shape Geometric shape
      * @param name Identification name
      * @return Our fixture
@@ -45,7 +45,7 @@ public class Helper {
         FixtureDef def = new FixtureDef();
         def.density = 1; // Body density - Starts with 1
         def.friction = 0.06f; // Friction between two bodies - Starts with 0.06f
-        def.restitution = 0.3f; // Restitution of bodies collisions - Starts with 0.3f
+        def.restitution = 0.3f; // Restitution (elasticity) of bodies collisions - Starts with 0.3f
         def.shape = shape;
 
         Fixture fixture = body.createFixture(def);

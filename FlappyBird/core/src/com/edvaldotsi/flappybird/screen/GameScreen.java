@@ -1,6 +1,7 @@
 package com.edvaldotsi.flappybird.screen;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
@@ -63,18 +64,23 @@ public class GameScreen extends BaseScreen {
         Gdx.gl.glClearColor(.25f, .25f, .25f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        control();
+
         update(delta);
+        updateCamera();
         updateGround();
         draw(delta);
 
         debug.render(world, camera.combined.cpy().scl(Helper.PIXEL_METER));
     }
 
-    private void updateGround() {
-        float width = camera.viewportWidth / Helper.PIXEL_METER;
-        Vector2 position = ground.getPosition();
-        position.x = width / 2;
-        ground.setTransform(position, -0.2f);
+    private boolean jumping = false;
+
+    /**
+     * Capture the keys
+     */
+    private void control() {
+        jumping = Gdx.input.justTouched();
     }
 
     /**
@@ -83,7 +89,27 @@ public class GameScreen extends BaseScreen {
      * @param delta Delta time
      */
     private void update(float delta) {
+        bird.update(delta);
+        if (jumping)
+            bird.jump();
+
         world.step(1f / 60f, 6, 2);
+    }
+
+    private void updateCamera() {
+        camera.position.x = (bird.getBody().getPosition().x + bird.getWidth() / Helper.PIXEL_METER) * Helper.PIXEL_METER;
+        camera.update();
+    }
+
+    /**
+     * Update the ground to follow the camera
+     */
+    private void updateGround() {
+        float width = camera.viewportWidth / Helper.PIXEL_METER;
+        Vector2 position = ground.getPosition();
+        position.x = width / 2;
+        ground.getPosition().x = bird.getBody().getPosition().x + bird.getWidth() / Helper.PIXEL_METER;
+        ground.setTransform(position, 0f);
     }
 
     /**
