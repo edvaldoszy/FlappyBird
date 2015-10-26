@@ -13,6 +13,7 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 import com.edvaldotsi.flappybird.MainGame;
 import com.edvaldotsi.flappybird.body.Bird;
+import com.edvaldotsi.flappybird.body.Tube;
 import com.edvaldotsi.flappybird.util.Helper;
 
 /**
@@ -49,6 +50,8 @@ public class GameScreen extends BaseScreen {
 
         initGround();
         initBird();
+
+        new Tube(world, camera, null);
     }
 
     private void initGround() {
@@ -105,11 +108,15 @@ public class GameScreen extends BaseScreen {
      * Update the ground to follow the camera
      */
     private void updateGround() {
+        Vector2 pos = bird.getBody().getPosition();
+        ground.setTransform(pos.x, 0, 0);
+        /*
         float width = camera.viewportWidth / Helper.PIXEL_METER;
         Vector2 position = ground.getPosition();
         position.x = width / 2;
         ground.getPosition().x = bird.getBody().getPosition().x + bird.getWidth() / Helper.PIXEL_METER;
         ground.setTransform(position, 0f);
+        */
     }
 
     /**
