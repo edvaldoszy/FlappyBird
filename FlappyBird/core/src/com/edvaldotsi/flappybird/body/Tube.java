@@ -22,6 +22,7 @@ public class Tube  {
     private boolean scored = false;
 
     private Tube lastTube;
+    private boolean passed;
 
     public Tube(World world, OrthographicCamera camera, Tube lastTube) {
         this.world = world;
@@ -77,5 +78,13 @@ public class Tube  {
 
     public float getX() {
         return x;
+    }
+
+    public boolean isPassed() {
+        return passed;
+    }
+
+    public void setPassed(boolean passed) {
+        this.passed = passed;
     }
 }
