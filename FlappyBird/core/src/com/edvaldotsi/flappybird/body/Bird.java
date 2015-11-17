@@ -3,6 +3,7 @@ package com.edvaldotsi.flappybird.body;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
@@ -46,8 +47,26 @@ public class Bird {
         loader.attachFixture(body, "Bird", def, 1, "bird");
 	}
 
-    public void update(float delta) {
-        body.setLinearVelocity(3f, body.getLinearVelocity().y);
+    public void update(float delta, boolean move) {
+        if (move) {
+            body.setLinearVelocity(3f, body.getLinearVelocity().y);
+            updateRotation();
+        }
+    }
+
+    private void updateRotation() {
+        float speedY = body.getLinearVelocity().y;
+        float rotation;
+
+        if (speedY < 0) {
+            rotation = -15; // Going down
+        } else if (speedY > 0) {
+            rotation = 15; // going up
+        } else {
+            rotation = 0;
+        }
+        rotation = (float) Math.toRadians(rotation);
+        body.setTransform(body.getPosition(), rotation);
     }
 
     /**

@@ -1,10 +1,12 @@
 package com.edvaldotsi.flappybird.screen;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -16,8 +18,12 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.edvaldotsi.flappybird.MainGame;
@@ -47,7 +53,17 @@ public class GameScreen extends BaseScreen {
     private Label lbScore;
     private int score = 0;
 
+    private Texture[] birdTextures;
+    private Texture topTubeTexture, bottomTubeTexture;
+    private Texture groundTexture;
+    private Texture backgroundTexture;
+    private Texture btnPlayTexture;
+    private Texture btnGameOverTexture;
+
+    private ImageButton btnPlay, btnGameOver;
+
     private boolean gameOver = false;
+    private boolean gameStarted = false;
 
     /**
      * Draw objects into the camera
@@ -70,29 +86,41 @@ public class GameScreen extends BaseScreen {
             public void beginContact(Contact contact) {
                 detectCollision(contact.getFixtureA(), contact.getFixtureB());
             }
-
             @Override
-            public void endContact(Contact contact) {
-
-            }
-
+            public void endContact(Contact contact) {}
             @Override
             public void preSolve(Contact contact, Manifold oldManifold) {}
-
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {}
         });
 
+        initTextures();
         initGround();
         initBird();
         initInformation();
         tubes = new Array<Tube>();
     }
 
+    private void initTextures() {
+        birdTextures = new Texture[3];
+        birdTextures[0] = new Texture("sprites/bird-1.png");
+        birdTextures[1] = new Texture("sprites/bird-2.png");
+        birdTextures[2] = new Texture("sprites/bird-3.png");
+
+        topTubeTexture = new Texture("sprites/toptube.png");
+        bottomTubeTexture = new Texture("sprites/bottomtube.png");
+
+        backgroundTexture = new Texture("sprites/bg.png");
+        groundTexture = new Texture("sprites/ground.png");
+
+        btnPlayTexture = new Texture("sprites/playbtn.png");
+        btnGameOverTexture = new Texture("sprites/gameover.png");
+    }
+
     // Check if the bird collided
     private void detectCollision(Fixture fixtureA, Fixture fixtureB) {
         if ("bird".equals(fixtureA.getUserData()) || "bird".equals(fixtureB.getUserData())) {
-            // Game over
+            gameOver = true; // Game over
         }
     }
 
@@ -108,8 +136,34 @@ public class GameScreen extends BaseScreen {
         infoStage = new Stage(new FillViewport(infoCamera.viewportWidth, infoCamera.viewportHeight, infoCamera));
 
         Label.LabelStyle style = new Label.LabelStyle();
-        style.font = new BitmapFont(Gdx.files.external("fonts/roboto.ttf"));
-        lbScore = new Label("", style);
+        //style.font = new BitmapFont(Gdx.files.local("fonts/roboto.ttf"));
+        //lbScore = new Label("0", style);
+
+        ImageButton.ImageButtonStyle btnStyle = new ImageButton.ImageButtonStyle();
+        btnStyle.up = new SpriteDrawable(new Sprite(btnPlayTexture));
+        btnPlay = new ImageButton(btnStyle);
+        btnPlay.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gameStarted = true;
+            }
+        });
+        infoStage.addActor(btnPlay);
+
+        btnStyle = new ImageButton.ImageButtonStyle();
+        btnStyle.up = new SpriteDrawable(new Sprite(btnGameOverTexture));
+        btnGameOver = new ImageButton(btnStyle);
+        btnGameOver.addListener(new ClickListener(){
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                restartGame();
+            }
+        });
+        infoStage.addActor(btnGameOver);
+    }
+
+    private void restartGame() {
+        // restart the game
     }
 
     @Override
@@ -121,17 +175,33 @@ public class GameScreen extends BaseScreen {
 
         update(delta);
         updateInformations();
-        updateTubes();
-        updateCamera();
-        updateGround();
+        if (gameStarted)
+            updateTubes();
+
+        if (!gameOver) {
+            updateCamera();
+            updateGround();
+        }
         draw(delta);
 
         debug.render(world, camera.combined.cpy().scl(Helper.PIXEL_METER));
     }
 
     private void updateInformations() {
-        lbScore.setText(score + "");
-        lbScore.setPosition(infoCamera.viewportWidth / 2 - lbScore.getPrefWidth() / 2, infoCamera.viewportHeight - lbScore.getPrefHeight());
+        //lbScore.setText(score + "");
+        //lbScore.setPosition(infoCamera.viewportWidth / 2 - lbScore.getPrefWidth() / 2, infoCamera.viewportHeight - lbScore.getPrefHeight());
+
+        btnPlay.setPosition(
+                camera.viewportWidth / 2 - btnPlay.getPrefWidth() / 2,
+                camera.viewportHeight / 2 - btnPlay.getPrefHeight()
+        );
+        btnPlay.setVisible(!gameOver);
+
+        btnPlay.setPosition(
+                camera.viewportWidth / 2 - btnGameOver.getPrefWidth() / 2,
+                camera.viewportHeight / 2 - btnGameOver.getPrefHeight() / 2
+        );
+        btnPlay.setVisible(gameOver);
     }
 
     private void updateTubes() {
@@ -173,11 +243,13 @@ public class GameScreen extends BaseScreen {
     private void update(float delta) {
         infoStage.act(delta);
 
-        bird.update(delta);
-        if (jumping)
+        bird.getBody().setFixedRotation(!gameOver);
+        bird.update(delta, !gameOver);
+        if (jumping && !gameOver && gameStarted)
             bird.jump();
 
-        world.step(1f / 60f, 6, 2);
+        if (gameStarted)
+            world.step(1f / 60f, 6, 2);
     }
 
     private void updateCamera() {
@@ -222,6 +294,7 @@ public class GameScreen extends BaseScreen {
         PolygonShape shape= new PolygonShape();
         shape.setAsBox(width / 2, Helper.BORDER_HEIGHT / 2);
         //Fixture fixture = Helper.createShape(ground, shape, "ground");
+        Helper.createShape(ground, shape, "ground");
         shape.dispose();
     }
 
@@ -240,5 +313,18 @@ public class GameScreen extends BaseScreen {
         debug.dispose();
         world.dispose();
         infoStage.dispose();
+
+        birdTextures[0].dispose();
+        birdTextures[1].dispose();
+        birdTextures[2].dispose();
+
+        topTubeTexture.dispose();
+        bottomTubeTexture.dispose();
+
+        btnGameOverTexture.dispose();
+        groundTexture.dispose();
+
+        btnPlayTexture.dispose();
+        backgroundTexture.dispose();
     }
 }
