@@ -1,6 +1,8 @@
 package com.edvaldotsi.flappybird.body;
 
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -22,12 +24,16 @@ public class Tube  {
     private boolean scored = false;
 
     private Tube lastTube;
+    private Texture topTexture;
+    private Texture bottomTexture;
     private boolean passed;
 
-    public Tube(World world, OrthographicCamera camera, Tube lastTube) {
+    public Tube(World world, OrthographicCamera camera, Tube lastTube, Texture topTexture, Texture bottomTexture) {
         this.world = world;
         this.camera = camera;
         this.lastTube = lastTube;
+        this.topTexture = topTexture;
+        this.bottomTexture = bottomTexture;
 
         initPosition();
         initTopBody();
@@ -74,6 +80,16 @@ public class Tube  {
     public void remove() {
         world.destroyBody(topBody);
         world.destroyBody(bottomBody);
+    }
+
+    public void render(SpriteBatch batch) {
+        float x = (topBody.getPosition().x - width / 2) * Helper.PIXEL_METER;
+        float y = (topBody.getPosition().y - height / 2) * Helper.PIXEL_METER;
+        batch.draw(topTexture, x, y, width * Helper.PIXEL_METER, height * Helper.PIXEL_METER);
+
+        x = (bottomBody.getPosition().x - width / 2) * Helper.PIXEL_METER;
+        y = (bottomBody.getPosition().y - height / 2) * Helper.PIXEL_METER;
+        batch.draw(bottomTexture, x, y, width * Helper.PIXEL_METER, height * Helper.PIXEL_METER);
     }
 
     public float getX() {

@@ -3,7 +3,10 @@ package com.edvaldotsi.flappybird.body;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
@@ -21,6 +24,7 @@ public class Bird {
 	private final World world;
 	private final OrthographicCamera camera;
 	private final Texture[] textures;
+    private Sprite sprite;
 
 	private Body body;
 
@@ -28,6 +32,7 @@ public class Bird {
 		this.world = world;
 		this.camera = camera;
 		this.textures = textures;
+        this.sprite = new Sprite(textures[0]);
 
 		initBody();
 	}
@@ -75,6 +80,15 @@ public class Bird {
     public void jump() {
         body.setLinearVelocity(body.getLinearVelocity().x, 0);
         body.applyForceToCenter(0, 100, false);
+    }
+
+    public void render(SpriteBatch batch) {
+        Vector2 pos = body.getPosition();
+        //sprite.setTexture(textures[0]);
+        sprite.setPosition(pos.x * Helper.PIXEL_METER, pos.y * Helper.PIXEL_METER);
+        sprite.setOrigin(0, 0);
+        sprite.setRotation((float) Math.toDegrees(body.getAngle()));
+        sprite.draw(batch);
     }
 
     public Body getBody() {

@@ -5,8 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -60,10 +59,14 @@ public class GameScreen extends BaseScreen {
     private Texture btnPlayTexture;
     private Texture btnGameOverTexture;
 
+    private SpriteBatch batch;
+
+    private Sprite ground1, ground2;
+
     private ImageButton btnPlay, btnGameOver;
 
     private boolean gameOver = false;
-    private boolean gameStarted = false;
+    private boolean gameStarted = true;
 
     /**
      * Draw objects into the camera
@@ -93,6 +96,7 @@ public class GameScreen extends BaseScreen {
             @Override
             public void postSolve(Contact contact, ContactImpulse impulse) {}
         });
+        batch = new SpriteBatch();
 
         initTextures();
         initGround();
@@ -126,10 +130,19 @@ public class GameScreen extends BaseScreen {
 
     private void initGround() {
         ground = Helper.createBody(world, BodyDef.BodyType.StaticBody, 0, 0);
+
+        float cameraX = 0;
+        float height = (Helper.BORDER_HEIGHT* Helper.PIXEL_METER / Helper.SCALE);
+
+        ground1 = new Sprite(groundTexture);
+        ground1.setBounds(cameraX, 0, camera.viewportWidth, height);
+
+        ground2 = new Sprite(groundTexture);
+        ground2.setBounds(cameraX + camera.viewportWidth, 0, camera.viewportWidth, height);
     }
 
     private void initBird() {
-        bird = new Bird(world, camera, null);
+        bird = new Bird(world, camera, birdTextures);
     }
 
     private void initInformation() {
@@ -173,6 +186,7 @@ public class GameScreen extends BaseScreen {
 
         control();
 
+        draw(delta);
         update(delta);
         updateInformations();
         if (gameStarted)
@@ -182,9 +196,8 @@ public class GameScreen extends BaseScreen {
             updateCamera();
             updateGround();
         }
-        draw(delta);
 
-        debug.render(world, camera.combined.cpy().scl(Helper.PIXEL_METER));
+        //debug.render(world, camera.combined.cpy().scl(Helper.PIXEL_METER));
     }
 
     private void updateInformations() {
@@ -211,7 +224,7 @@ public class GameScreen extends BaseScreen {
             if (tubes.size > 0)
                 lastTube = tubes.peek();
 
-            tubes.add(new Tube(world, camera, lastTube));
+            tubes.add(new Tube(world, camera, lastTube, topTubeTexture, bottomTubeTexture));
         }
 
         for (Tube t : tubes) {
@@ -263,6 +276,13 @@ public class GameScreen extends BaseScreen {
     private void updateGround() {
         Vector2 pos = bird.getBody().getPosition();
         ground.setTransform(pos.x, 0, 0);
+
+        float cameraX = camera.position.x - (camera.viewportWidth / 2) - camera.viewportWidth;
+        if (ground1.getX() < cameraX)
+            ground1.setBounds(ground2.getX() + camera.viewportWidth, 0, ground1.getWidth(), ground1.getHeight());
+
+        if (ground2.getX() < cameraX)
+            ground2.setBounds(ground1.getX() + camera.viewportWidth, 0, ground2.getWidth(), ground2.getHeight());
     }
 
     /**
@@ -271,7 +291,26 @@ public class GameScreen extends BaseScreen {
      * @param delta Delta time
      */
     private void draw(float delta) {
+        batch.begin();
 
+        batch.setProjectionMatrix(infoCamera.combined);
+        batch.draw(backgroundTexture, 0, 0, infoCamera.viewportWidth, infoCamera.viewportHeight);
+
+        batch.setProjectionMatrix(camera.combined);
+
+        // Draw the bird
+        bird.render(batch);
+
+        // Draw the tubes
+        for (Tube t : tubes) {
+            t.render(batch);
+        }
+
+        // Draw the ground
+        ground1.draw(batch);
+        ground2.draw(batch);
+
+        batch.end();
     }
 
     @Override
@@ -326,5 +365,7 @@ public class GameScreen extends BaseScreen {
 
         btnPlayTexture.dispose();
         backgroundTexture.dispose();
+
+        batch.dispose();
     }
 }
